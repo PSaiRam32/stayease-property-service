@@ -10,6 +10,7 @@ import java.util.Optional;
 @Repository
 public interface PropertyRepository extends JpaRepository<Property, Long> {
 
-    Optional<Property> findByIdAndIsActiveTrue(Long id);
-    List<Property> findByOwnerIdAndIsActiveTrue(String ownerId);
+    Optional<Property> findByPropertyId(Long propertyId);
+    List<Property> findByOwnerId(Long ownerId);
+    Long countByOwnerId(Long ownerId);
 }

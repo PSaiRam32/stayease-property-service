@@ -1,6 +1,6 @@
 package com.stayease.property_service.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 @Getter
@@ -11,4 +11,7 @@ public class PropertyRequestDTO {
     @NotBlank
     private String location;
     private String description;
+    @NotNull
+    private Long ownerId;
+    private Double rating;
 }

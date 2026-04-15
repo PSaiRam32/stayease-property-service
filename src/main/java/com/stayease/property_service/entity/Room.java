@@ -1,5 +1,6 @@
 package com.stayease.property_service.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,8 +18,11 @@ public class Room {
     private Long id;
     private Integer capacity;
     private Double price;
-    private Boolean available;
+    private Integer availableCount;
     @ManyToOne
-    @JoinColumn(name = "property_id", nullable = false)
+    @JoinColumn(name = "properties_property_id",nullable = false)
+    @JsonBackReference
     private Property property;
+    @Version
+    private long version;
 }

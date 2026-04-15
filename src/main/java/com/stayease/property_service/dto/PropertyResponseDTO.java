@@ -1,15 +1,19 @@
 package com.stayease.property_service.dto;
 
 import lombok.*;
+import java.util.List;
 
 
 @Getter
 @Setter
 @Builder
 public class PropertyResponseDTO {
-    private Long id;
-    private String ownerId;
-    private String title;
-    private String location;
-    private String description;
+    public Long id;
+    public Long ownerId;
+    public String title;
+    public String location;
+    public String description;
+    public Double rating;
+    private List<RoomResponse> rooms;
+    private List<AmenityResponseDTO> amenities;
 }

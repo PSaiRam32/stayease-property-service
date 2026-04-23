@@ -26,7 +26,10 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
             "/auth/register",
             "/auth/refresh-token",
             "/owners/auth-internal",
-            "/owners/owners-internal/**"
+            "/owners/owners-internal/**",
+            "/owners/**",
+            "/properties/**",
+            "/rooms/**"
     );
 
     @Override

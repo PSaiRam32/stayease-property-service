@@ -27,7 +27,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/owner-internal/**",
-                                "/count"
+                                "/count",
+                                "/properties/rooms/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
@@ -37,8 +38,6 @@ public class SecurityConfig {
         return http.build();
     }
 }
-
-
 
 //@Configuration
 //@EnableWebSecurity
@@ -50,8 +49,8 @@ public class SecurityConfig {
 //        log.info("Configuring SecurityFilterChain - TESTING MODE (All endpoints open)");
 //
 //        http
-//                .csrf(csrf -> csrf.disable())
-//                .headers(headers -> headers.disable())
+//                .csrf(csrf->csrf.disable())
+//                .headers(AbstractHttpConfigurer::disable)
 //                .authorizeHttpRequests(auth -> auth
 //                        .anyRequest().permitAll()  // Allow all requests for testing
 //                );

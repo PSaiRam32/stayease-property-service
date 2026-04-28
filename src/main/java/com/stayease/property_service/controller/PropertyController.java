@@ -53,7 +53,7 @@ public class PropertyController {
         log.info("Creating new property for owner ID: {}", request.getOwnerId());
         log.debug("Property request: title={}, location={}", request.getTitle(), request.getLocation());
         PropertyResponseDTO property = propertyService.createProperty(request);
-        log.info("Property created successfully with ID: {}", property.getId());
+        log.info("Property created successfully with ID: {}", property.getPropertyId());
         return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "Property created successfully", property));
     }
 

@@ -8,8 +8,10 @@ import java.util.List;
 @Setter
 @Builder
 public class PropertyResponseDTO {
-    public Long id;
+    public Long propertyId;
     public Long ownerId;
+    public String ownerName;
+    public String phoneNumber;
     public String title;
     public String location;
     public String description;

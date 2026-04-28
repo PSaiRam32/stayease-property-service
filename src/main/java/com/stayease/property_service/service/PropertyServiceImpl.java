@@ -70,12 +70,12 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
-    public PropertyResponseDTO updateProperty(Long id, PropertyRequestDTO request) {
-        log.info("Updating property with ID: {}", id);
+    public PropertyResponseDTO updateProperty(Long propertyid, PropertyRequestDTO request) {
+        log.info("Updating property with ID: {}", propertyid);
         log.debug("Update request: title={}, location={}, description={}", request.getTitle(), request.getLocation(), request.getDescription());
-        Property property = propertyRepository.findByPropertyId(id)
+        Property property = propertyRepository.findByPropertyId(propertyid)
                 .orElseThrow(() -> {
-                    log.error("Property not found with ID to update the details: {}", id);
+                    log.error("Property not found with ID to update the details: {}", propertyid);
                     return new BusinessException("Property not found");
                 });
         OwnerResponseDTO owner = ownerClient.getOwnerById(request.getOwnerId());
@@ -89,7 +89,7 @@ public class PropertyServiceImpl implements PropertyService {
         property.setDescription(request.getDescription());
         property.setUpdatedAt(LocalDateTime.now());
         Property updated = propertyRepository.save(property);
-        log.info("Property updated successfully with ID: {}", id);
+        log.info("Property updated successfully with ID: {}", propertyid);
         return mapToDTO(updated);
     }
 
@@ -114,21 +114,27 @@ public class PropertyServiceImpl implements PropertyService {
 
     private PropertyResponseDTO mapToDTO(Property property) {
         log.debug("Mapping property entity to DTO for property ID: {}", property.getPropertyId());
+        OwnerResponseDTO owner = ownerClient.getOwnerById(property.getOwnerId());
         List<com.stayease.property_service.entity.Room> rooms = roomRepository.findByProperty_PropertyId(property.getPropertyId());
         List<RoomResponse> roomResponses = rooms.stream().map(r -> RoomResponse.builder()
-                .id(r.getId())
+                .roomId(r.getRoomId())
                 .propertyId(r.getProperty().getPropertyId())
+                .propertyName(property.getTitle())
+                .ownerName(owner.getName())
+                .phoneNumber(owner.getPhoneNumber())
                 .capacity(r.getCapacity())
                 .price(r.getPrice())
                 .availableCount(r.getAvailableCount())
                 .build()).collect(Collectors.toList());
         java.util.Set<com.stayease.property_service.entity.Amenity> amenitySet = property.getAmenities();
         List<AmenityResponseDTO> amenities = (amenitySet == null) ? java.util.Collections.emptyList() : amenitySet.stream()
-                .map(a -> AmenityResponseDTO.builder().id(a.getId()).name(a.getName()).build())
+                .map(a -> AmenityResponseDTO.builder().id(a.getAmenityId()).name(a.getName()).build())
                 .collect(Collectors.toList());
         return PropertyResponseDTO.builder()
-                .id(property.getPropertyId())
+                .propertyId(property.getPropertyId())
                 .ownerId(property.getOwnerId())
+                .ownerName(owner.getName())
+                .phoneNumber(owner.getPhoneNumber())
                 .title(property.getTitle())
                 .location(property.getLocation())
                 .description(property.getDescription())

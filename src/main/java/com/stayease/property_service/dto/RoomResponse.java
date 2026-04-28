@@ -8,8 +8,12 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class RoomResponse {
-    private Long id;
+    private Long roomId;
     private Long propertyId;
+    private Long OwnerId;
+    private String ownerName;
+    private String phoneNumber;
+    private String propertyName;
     private Integer capacity;
     private Double price;
     private Integer availableCount;

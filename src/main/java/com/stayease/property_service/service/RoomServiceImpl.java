@@ -36,10 +36,11 @@ public class RoomServiceImpl implements RoomService {
                     log.error("Property not found with propertyID: {}", propertyId);
                     return new BusinessException("Property not found");
                 });
-        PropertyRequestDTO prd= new PropertyRequestDTO();
-        OwnerResponseDTO owner = ownerClient.getOwnerById(prd.getOwnerId());
+        if (property.getOwnerId() == null) {
+            throw new RuntimeException("OwnerId is null for property: " + propertyId);
+        }
+        OwnerResponseDTO owner = ownerClient.getOwnerById(property.getOwnerId());
         if (owner == null) {
-            log.error("Owner not found with ID: {}",prd.getOwnerId());
             throw new BusinessException("Owner not found");
         }
         log.debug("Owner found: {}", owner);

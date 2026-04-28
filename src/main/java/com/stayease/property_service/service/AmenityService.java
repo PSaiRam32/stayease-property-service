@@ -8,7 +8,7 @@ import java.util.List;
 public interface AmenityService {
     AmenityResponseDTO createAmenity(Amenity amenity);
     List<AmenityResponseDTO> getAllAmenities();
-    AmenityResponseDTO getAmenityById(Long id);
+    AmenityResponseDTO getAmenityById(Long amenityId);
     void linkAmenitiesToProperty(Long propertyId, List<Long> amenityIds);
 }
 

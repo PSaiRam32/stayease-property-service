@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 )
 public interface OwnerClient {
 
-    @GetMapping("/owners/owners-internal/{id}")
-    OwnerResponseDTO getOwnerById(@PathVariable("id") Long id);
+    @GetMapping("/owners/owners-internal/{ownerId}")
+    OwnerResponseDTO getOwnerById(@PathVariable("ownerId") Long ownerId);
 
-    @GetMapping("/owners/owners-internal/kyc-status/{id}")
-    String getKycStatus(@PathVariable("id") Long id);
+    @GetMapping("/owners/owners-internal/kyc-status/{ownerId}")
+    String getKycStatus(@PathVariable("ownerId") Long ownerId);
 }

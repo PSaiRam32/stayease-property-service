@@ -13,7 +13,7 @@ import lombok.*;
 public class Amenity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long amenityId;
     private String name;
     @ManyToMany(mappedBy = "amenities")
     private java.util.Set<Property> properties;

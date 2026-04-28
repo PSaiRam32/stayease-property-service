@@ -43,11 +43,11 @@ public class AmenityController {
         return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "Amenities fetched", list));
     }
 
-    @GetMapping("/getamenity/{id}")
+    @GetMapping("/getamenity/{amenityId}")
     @Operation(summary = "Get Amenity")
     @PreAuthorize("hasRole('OWNER') or hasRole('USER')")
-    public ResponseEntity<ApiResponse<AmenityResponseDTO>> getAmenityById(@PathVariable Long id) {
-        AmenityResponseDTO dto = amenityService.getAmenityById(id);
+    public ResponseEntity<ApiResponse<AmenityResponseDTO>> getAmenityById(@PathVariable Long amenityId) {
+        AmenityResponseDTO dto = amenityService.getAmenityById(amenityId);
         return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "Amenity fetched", dto));
     }
 

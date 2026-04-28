@@ -8,9 +8,9 @@ import lombok.Setter;
 @Setter
 @Builder
 public class OwnerResponseDTO {
-    private Long id;
+    private Long ownerId;
     private String name;
     private String email;
-    private String phone;
+    private String phoneNumber;
     private String kycStatus;
 }

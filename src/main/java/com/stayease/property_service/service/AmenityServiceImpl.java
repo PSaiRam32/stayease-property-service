@@ -24,7 +24,7 @@ public class AmenityServiceImpl implements AmenityService {
 		log.info("Creating amenity: {}", amenity.getName());
 		Amenity saved = amenityRepository.save(amenity);
 		return AmenityResponseDTO.builder()
-				.id(saved.getId())
+				.id(saved.getAmenityId())
 				.name(saved.getName())
 				.build();
 	}
@@ -33,14 +33,14 @@ public class AmenityServiceImpl implements AmenityService {
 	public List<AmenityResponseDTO> getAllAmenities() {
 		return amenityRepository.findAll()
 				.stream()
-				.map(a -> AmenityResponseDTO.builder().id(a.getId()).name(a.getName()).build())
+				.map(a -> AmenityResponseDTO.builder().id(a.getAmenityId()).name(a.getName()).build())
 				.collect(Collectors.toList());
 	}
 
 	@Override
-	public AmenityResponseDTO getAmenityById(Long id) {
-		Amenity a = amenityRepository.findById(id).orElseThrow(() -> new RuntimeException("Amenity not found"));
-		return AmenityResponseDTO.builder().id(a.getId()).name(a.getName()).build();
+	public AmenityResponseDTO getAmenityById(Long amenityId) {
+		Amenity a = amenityRepository.findById(amenityId).orElseThrow(() -> new RuntimeException("Amenity not found"));
+		return AmenityResponseDTO.builder().id(a.getAmenityId()).name(a.getName()).build();
 	}
 
 	@Override

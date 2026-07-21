@@ -4,7 +4,6 @@ import com.stayease.property_service.dto.request.*;
 import com.stayease.property_service.dto.response.PendingPropertyResponse;
 import com.stayease.property_service.dto.response.PropertyResponse;
 import com.stayease.property_service.dto.response.PropertySearchResponse;
-import com.stayease.property_service.entity.PropertyStatus;
 import org.springframework.data.domain.Page;
 import java.util.List;
 

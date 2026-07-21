@@ -1,10 +1,8 @@
 package com.stayease.property_service.dto.response;
 
 import com.stayease.property_service.entity.WashroomType;
-import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.validation.constraints.Min;
 import lombok.*;
 
 @Getter

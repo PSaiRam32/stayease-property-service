@@ -4,23 +4,16 @@ import com.stayease.property_service.config.OwnerClient;
 import com.stayease.property_service.dto.response.OwnerResponse;
 import com.stayease.property_service.dto.request.RoomRequest;
 import com.stayease.property_service.dto.response.RoomDetailsResponse;
-import com.stayease.property_service.dto.response.RoomResponse;
 import com.stayease.property_service.entity.Property;
 import com.stayease.property_service.entity.Room;
-import com.stayease.property_service.entity.WashroomType;
 import com.stayease.property_service.exception.BusinessException;
 import com.stayease.property_service.exception.ExternalServiceException;
 import com.stayease.property_service.exception.ResourceNotFoundException;
 import com.stayease.property_service.repository.PropertyRepository;
 import com.stayease.property_service.repository.RoomRepository;
 import feign.FeignException;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-//import org.springframework.security.access.AccessDeniedException;
-//import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -109,17 +102,17 @@ public class RoomServiceImpl implements RoomService {
         log.info("Room released successfully with Room ID: {}", roomId);
     }
 
-    @Override
-    public Boolean checkAvailability(Long roomId) {
-        log.debug("Checking availability for room ID: {}", roomId);
-        Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> {
-                    log.error("Room not found with RoomID: {}",roomId);
-                    return new BusinessException("Room not found");
-                });
-        log.debug("Room {} has {} available slots", roomId, room.getAvailableCount());
-        return room.getAvailableCount() > 0;
-    }
+//    @Override
+//    public Boolean checkAvailability(Long roomId) {
+//        log.debug("Checking availability for room ID: {}", roomId);
+//        Room room = roomRepository.findById(roomId)
+//                .orElseThrow(() -> {
+//                    log.error("Room not found with RoomID: {}",roomId);
+//                    return new BusinessException("Room not found");
+//                });
+//        log.debug("Room {} has {} available slots", roomId, room.getAvailableCount());
+//        return room.getAvailableCount() > 0;
+//    }
 
     @Override
     public RoomDetailsResponse getRoomDetails(Long roomId){

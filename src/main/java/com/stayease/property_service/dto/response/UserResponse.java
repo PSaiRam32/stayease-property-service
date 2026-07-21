@@ -2,8 +2,6 @@ package com.stayease.property_service.dto.response;
 
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @Builder

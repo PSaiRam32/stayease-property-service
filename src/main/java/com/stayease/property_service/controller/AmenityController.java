@@ -13,7 +13,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -29,7 +28,6 @@ public class AmenityController{
     @Operation(summary = "Create Amenity")
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<AmenityResponse>> createAmenity(@Valid @RequestBody AmenityRequest request){
-        log.info("Creating amenity: {}", request.getName());
         Amenity amenity=Amenity.builder().name(request.getName()).build();
         AmenityResponse response=amenityService.createAmenity(request);
         return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "Amenity created", response));
@@ -48,7 +46,6 @@ public class AmenityController{
     @Operation(summary = "Get Amenity")
     @PreAuthorize("hasRole('OWNER') or hasRole('USER')")
     public ResponseEntity<ApiResponse<AmenityResponse>> getAmenityById(@PathVariable Long amenityId){
-        log.info("Fetching amenity with ID: {}", amenityId);
         AmenityResponse amenity=amenityService.getAmenityById(amenityId);
         return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "Amenity retrieved successfully.", amenity));
     }
@@ -57,7 +54,6 @@ public class AmenityController{
     @Operation(summary = "Link amenities to property")
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<String>> linkAmenitiesToProperty(@PathVariable Long propertyId, @RequestBody List<Long> amenityIds){
-        log.info("Linking {} amenities to property ID: {}", amenityIds.size(), propertyId);
         // delegate to amenityService (we'll implement linking there)
         amenityService.linkAmenitiesToProperty(propertyId, amenityIds);
         return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "Amenities linked successfully.",  "Amenities linked successfully."));

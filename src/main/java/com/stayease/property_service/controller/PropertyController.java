@@ -4,8 +4,6 @@ import com.stayease.property_service.dto.request.*;
 import com.stayease.property_service.dto.response.PendingPropertyResponse;
 import com.stayease.property_service.dto.response.PropertyResponse;
 import com.stayease.property_service.dto.response.PropertySearchResponse;
-import com.stayease.property_service.entity.Property;
-import com.stayease.property_service.entity.PropertyStatus;
 import com.stayease.property_service.service.PropertyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

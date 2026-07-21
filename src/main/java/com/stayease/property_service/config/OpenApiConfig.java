@@ -31,7 +31,6 @@ public class OpenApiConfig {
                                         .bearerFormat("JWT")
                                         .description("JWT token for authentication")))
                 .addSecurityItem(new SecurityRequirement().addList("bearer-jwt"));
-
         log.info("OpenAPI configuration initialized successfully with security scheme");
         return openAPI;
     }

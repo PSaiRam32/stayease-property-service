@@ -3,6 +3,7 @@ package com.stayease.property_service.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Set;
 @Entity
 @Table(name = "amenities")
 @Getter
@@ -16,5 +17,5 @@ public class Amenity {
     private Long amenityId;
     private String name;
     @ManyToMany(mappedBy = "amenities")
-    private java.util.Set<Property> properties;
+    private Set<Property> properties;
 }

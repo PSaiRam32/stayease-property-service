@@ -11,14 +11,17 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Room {
-
+public class Room{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long RoomId;
-    private Integer capacity;
+    private Long RoomId ;
+    @Column(nullable = false)
+    private String roomNumber;
+    private Integer sharingCapacity;
     private Double price;
     private Integer availableCount;
+    @Enumerated(EnumType.STRING)
+    private WashroomType washroomType;
     @ManyToOne
     @JoinColumn(name = "properties_property_id",nullable = false)
     @JsonBackReference

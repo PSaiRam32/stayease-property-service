@@ -1,4 +1,4 @@
-package com.stayease.property_service.dto;
+package com.stayease.property_service.dto.response;
 
 import lombok.*;
 
@@ -7,8 +7,8 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class AmenityResponseDTO {
-    private Long id;
+public class AmenityResponse {
+    private Long amenityId;
     private String name;
 }
 

@@ -1,4 +1,4 @@
-package com.stayease.property_service.dto;
+package com.stayease.property_service.dto.response;
 
 import lombok.*;
 

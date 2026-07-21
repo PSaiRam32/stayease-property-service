@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "properties")
@@ -13,23 +14,36 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Property {
-
+public class Property{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "property_id")
     private Long propertyId;
     private Long ownerId;
     @Column(nullable = false)
-    private String title;
+    private String propertyTitle;
+    private String description;
     @Column(nullable = false)
     private String location;
-    private String description;
-    private Double rating;
+    private String city;
+    private String state;
+    private String country;
     @Builder.Default
-    private Boolean isActive = true;
+    private Double averageRating = 0.0;
+    @Builder.Default
+    private Boolean deleted = false;
+    @Builder.Default
+    private Boolean isActive = false;
+//    private Double latitude;
+//    private Double longitude;
+//    private String thumbnailUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    @Enumerated(EnumType.STRING)
+    private PropertyStatus status;
+    private Long reviewedBy;
+    private LocalDateTime reviewedAt;
+    private String rejectionReason;
     @OneToMany(mappedBy = "property", cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<Room> rooms;
@@ -39,6 +53,6 @@ public class Property {
             joinColumns = @JoinColumn(name = "property_id"),
             inverseJoinColumns = @JoinColumn(name = "amenity_id"),
             uniqueConstraints = @UniqueConstraint(columnNames = {"property_id", "amenity_id"}))
-    private java.util.Set<Amenity> amenities;
+    private Set<Amenity> amenities;
 }
 

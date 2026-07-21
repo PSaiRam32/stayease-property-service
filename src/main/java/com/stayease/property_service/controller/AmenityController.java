@@ -28,7 +28,6 @@ public class AmenityController{
     @Operation(summary = "Create Amenity")
     @PreAuthorize("hasRole('OWNER')")
     public ResponseEntity<ApiResponse<AmenityResponse>> createAmenity(@Valid @RequestBody AmenityRequest request){
-        Amenity amenity=Amenity.builder().name(request.getName()).build();
         AmenityResponse response=amenityService.createAmenity(request);
         return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "Amenity created", response));
     }

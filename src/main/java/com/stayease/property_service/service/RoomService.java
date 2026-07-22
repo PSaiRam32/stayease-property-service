@@ -11,7 +11,7 @@ public interface RoomService {
     void addRoom(Long propertyId, RoomRequest request);
     List<Room> getRooms(Long propertyId);
 //    Boolean reserveRoom(Long roomId);
-    void releaseRoom(Long roomId);
+//    void releaseRoom(Long roomId);
 //    Boolean checkAvailability(Long roomId);
     RoomDetailsResponse getRoomDetails(Long roomId);
 }

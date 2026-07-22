@@ -210,7 +210,33 @@ public class PropertyServiceImpl implements PropertyService {
         return mapToPropertyResponse(saved);
     }
 
-    //Helper Methods
+    //Validation Helper Methods
+
+    private void validateOwnerEligibility(Long ownerId){
+        OwnerResponse owner=ownerClient.getOwnerById(ownerId);
+        if (owner==null){
+            log.error("Owner not found with ID: {}", ownerId);
+            throw new ResourceNotFoundException("Owner not found");
+        }
+        log.debug("Owner found: {}", owner);
+        String kycStatus=ownerClient.getKycStatus(ownerId);
+        log.debug("KYC status for owner ID {}: {}", ownerId, kycStatus);
+        if (!"VERIFIED".equals(kycStatus)){
+            log.error("Owner KYC not verified for owner ID: {}", ownerId);
+            throw new BusinessException("Owner KYC not verified");
+        }
+    }
+
+    private void validatePendingProperty(Property property){
+        if (property.getDeleted()){
+            log.error("Deleted property {} cannot be reviewed.",property.getPropertyId());
+            throw new BusinessException("Deleted property cannot be reviewed.");
+        }
+        if (property.getStatus()!=PropertyStatus.PENDING){
+            log.error("Only pending properties can be reviewed. Current status: {}",property.getStatus());
+            throw new BusinessException("Only pending properties can be reviewed.");
+        }
+    }
 
     private void validatePropertyActivation(Property property){
         if(property.getDeleted()){
@@ -219,6 +245,15 @@ public class PropertyServiceImpl implements PropertyService {
         if(property.getStatus()!=PropertyStatus.ACTIVE && property.getStatus()!=PropertyStatus.INACTIVE){
             throw new BusinessException("Property must be approved before activation.");
         }
+    }
+
+   //Repository Helpers
+
+    private  Property getPropertyByIdOrThrow(Long propertyId){
+        return propertyRepository.findByPropertyIdAndDeletedFalse(propertyId).orElseThrow(() -> {
+            log.error("Property not found with ID to update the details: {}", propertyId);
+            return new ResourceNotFoundException("Property not found");
+        });
     }
 
     private List<PendingPropertyResponse> getPropertiesByStatus(PropertyStatus status){
@@ -245,39 +280,7 @@ public class PropertyServiceImpl implements PropertyService {
                 .toList();
     }
 
-    private void validatePendingProperty(Property property){
-        if (property.getDeleted()){
-            log.error("Deleted property {} cannot be reviewed.",property.getPropertyId());
-            throw new BusinessException("Deleted property cannot be reviewed.");
-        }
-        if (property.getStatus()!=PropertyStatus.PENDING){
-            log.error("Only pending properties can be reviewed. Current status: {}",property.getStatus());
-            throw new BusinessException("Only pending properties can be reviewed.");
-        }
-    }
-
-    private void validateOwnerEligibility(Long ownerId){
-        OwnerResponse owner=ownerClient.getOwnerById(ownerId);
-        if (owner==null){
-            log.error("Owner not found with ID: {}", ownerId);
-            throw new ResourceNotFoundException("Owner not found");
-        }
-        log.debug("Owner found: {}", owner);
-        String kycStatus=ownerClient.getKycStatus(ownerId);
-        log.debug("KYC status for owner ID {}: {}", ownerId, kycStatus);
-        if (!"VERIFIED".equals(kycStatus)){
-            log.error("Owner KYC not verified for owner ID: {}", ownerId);
-            throw new BusinessException("Owner KYC not verified");
-        }
-    }
-
-
-    private  Property getPropertyByIdOrThrow(Long propertyId){
-        return propertyRepository.findByPropertyIdAndDeletedFalse(propertyId).orElseThrow(() -> {
-                    log.error("Property not found with ID to update the details: {}", propertyId);
-                    return new ResourceNotFoundException("Property not found");
-                });
-    }
+    //Entity Builder Helpers
 
     private Property buildProperty(PropertyRequest request){
         return Property.builder()
@@ -307,6 +310,8 @@ public class PropertyServiceImpl implements PropertyService {
         property.setUpdatedAt(LocalDateTime.now());
     }
 
+    //Mapper Helpers
+
     private List<RoomResponse> mapToRoomResponses(List<Room> rooms,Property property,OwnerResponse owner){
         return rooms.stream().map(room -> RoomResponse.builder()
                         .roomId(room.getRoomId())
@@ -317,7 +322,7 @@ public class PropertyServiceImpl implements PropertyService {
                         .phoneNumber(owner.getPhone())
                         .sharingCapacity(room.getSharingCapacity())
                         .price(room.getPrice())
-                        .availableCount(room.getAvailableCount())
+//                        .availableCount(room.getAvailableCount())
                         .build())
                 .toList();
     }

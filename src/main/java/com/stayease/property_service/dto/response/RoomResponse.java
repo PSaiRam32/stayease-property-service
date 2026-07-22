@@ -20,7 +20,7 @@ public class RoomResponse {
     private String propertyName;
     private Integer sharingCapacity;
     private Double price;
-    private Integer availableCount;
+//    private Integer availableCount;
     @Enumerated(EnumType.STRING)
     private WashroomType washroomType;
 }

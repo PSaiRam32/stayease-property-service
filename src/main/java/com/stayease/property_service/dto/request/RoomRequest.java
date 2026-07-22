@@ -15,7 +15,7 @@ public class RoomRequest {
     private String roomNumber;
     @Min(1)
     private Integer sharingCapacity;
-    @Min(1000)
+    @Min(100)
     private Double price;
     private Integer availableCount;
     @Enumerated(EnumType.STRING)

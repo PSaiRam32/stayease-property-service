@@ -125,7 +125,7 @@ public class RoomServiceImpl implements RoomService {
                 .ownerId(property.getOwnerId())
                 .sharingCapacity(room.getSharingCapacity())
                 .price(room.getPrice())
-                .availableCount(room.getAvailableCount())
+//                .availableCount(room.getAvailableCount())
                 .washroomType(room.getWashroomType())
                 .propertyStatus(property.getStatus())
                 .build();

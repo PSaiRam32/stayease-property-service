@@ -88,19 +88,19 @@ public class RoomServiceImpl implements RoomService {
 //        log.info("Room reserved successfully with ID: {}", roomId);
 //        return true;
 //    }
-
-    @Override
-    public void releaseRoom(Long roomId){
-        log.info("Releasing room with ID: {}", roomId);
-        Room room = roomRepository.findById(roomId)
-                .orElseThrow(() -> {
-                    log.error("Room not found with Room ID: {}", roomId);
-                    return new BusinessException("Room not found");
-                });
-        room.setAvailableCount(room.getAvailableCount() + 1);
-        roomRepository.save(room);
-        log.info("Room released successfully with Room ID: {}", roomId);
-    }
+//
+//    @Override
+//    public void releaseRoom(Long roomId){
+//        log.info("Releasing room with ID: {}", roomId);
+//        Room room = roomRepository.findById(roomId)
+//                .orElseThrow(() -> {
+//                    log.error("Room not found with Room ID: {}", roomId);
+//                    return new BusinessException("Room not found");
+//                });
+//        room.setAvailableCount(room.getAvailableCount() + 1);
+//        roomRepository.save(room);
+//        log.info("Room released successfully with Room ID: {}", roomId);
+//    }
 
 //    @Override
 //    public Boolean checkAvailability(Long roomId) {
@@ -125,7 +125,7 @@ public class RoomServiceImpl implements RoomService {
                 .ownerId(property.getOwnerId())
                 .sharingCapacity(room.getSharingCapacity())
                 .price(room.getPrice())
-                .availableCount(room.getAvailableCount())
+//                .availableCount(room.getAvailableCount())
                 .washroomType(room.getWashroomType())
                 .propertyStatus(property.getStatus())
                 .build();

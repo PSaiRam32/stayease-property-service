@@ -56,13 +56,13 @@ public class RoomController {
 //        return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "Room reserved successfully", result));
 //    }
 
-    @PutMapping("/releaseroom/{roomId}")
-    @PreAuthorize("hasRole('OWNER') or hasRole('USER')")
-    @Operation(summary = "Release Room")
-    public ResponseEntity<ApiResponse<String>> releaseRoom(@PathVariable Long roomId){
-        roomService.releaseRoom(roomId);
-        return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "Room released successfully", roomId.toString()));
-    }
+//    @PutMapping("/releaseroom/{roomId}")
+//    @PreAuthorize("hasRole('OWNER') or hasRole('USER')")
+//    @Operation(summary = "Release Room")
+//    public ResponseEntity<ApiResponse<String>> releaseRoom(@PathVariable Long roomId){
+//        roomService.releaseRoom(roomId);
+//        return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "Room released successfully", roomId.toString()));
+//    }
 
 //    @GetMapping("/availability/{roomId}")
 //    @PreAuthorize("hasRole('OWNER') or hasRole('USER')")

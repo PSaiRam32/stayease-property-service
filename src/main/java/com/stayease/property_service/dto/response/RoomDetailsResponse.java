@@ -15,7 +15,7 @@ public class RoomDetailsResponse{
     private Long ownerId;
     private Integer sharingCapacity;
     private Double price;
-    private Integer availableCount;
+//    private Integer availableCount;
     private WashroomType washroomType;
     private PropertyStatus propertyStatus;
 }

@@ -11,7 +11,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Amenity {
+public class Amenity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long amenityId;

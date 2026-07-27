@@ -1,9 +1,7 @@
 package com.stayease.property_service.service;
 
 import com.stayease.property_service.dto.request.*;
-import com.stayease.property_service.dto.response.PendingPropertyResponse;
-import com.stayease.property_service.dto.response.PropertyResponse;
-import com.stayease.property_service.dto.response.PropertySearchResponse;
+import com.stayease.property_service.dto.response.*;
 import org.springframework.data.domain.Page;
 import java.util.List;
 
@@ -23,4 +21,6 @@ public interface PropertyService {
     PropertyResponse activateProperty(Long propertyId);
     PropertyResponse deactivateProperty(Long propertyId);
     PropertyResponse deleteProperty(Long propertyId);
+    PropertySummaryResponse getPropertySummary(Long propertyId);
+    OwnerRoomStatisticsResponse getTotalRoomsByOwner(Long ownerId);
 }

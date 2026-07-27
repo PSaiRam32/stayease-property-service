@@ -38,8 +38,7 @@ public class ReviewController {
     @Operation(summary="Update Review")
     public ResponseEntity<ApiResponse<ReviewResponse>> updateReview(@Valid @RequestBody UpdateReviewRequest request){
         ReviewResponse response=reviewService.updateReview(request);
-        return ResponseEntity.ok(
-                new ApiResponse<>("SUCCESS", "Review updated successfully",response));
+        return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "Review updated successfully",response));
     }
 
     @DeleteMapping("/deletereview/{reviewId}")

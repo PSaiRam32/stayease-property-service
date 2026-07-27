@@ -7,7 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class AmenityResponse {
+public class AmenityResponse{
     private Long amenityId;
     private String name;
 }

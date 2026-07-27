@@ -74,7 +74,7 @@ public class AmenityServiceImpl implements AmenityService{
 			currentAmenities=new HashSet<>();
 		}
 		List<Amenity> amenities=amenityRepository.findAllById(amenityIds);
-		if (amenities.size() != amenityIds.size()) {
+		if (amenities.size()!=amenityIds.size()){
 			throw new ResourceNotFoundException("One or more amenities were not found.");
 		}
 		currentAmenities.addAll(amenities);

@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RoomRequest {
+public class RoomRequest{
     @Column(nullable = false)
     private String roomNumber;
     @Min(1)

@@ -7,7 +7,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class OwnerResponse {
+public class OwnerResponse{
     private Long ownerId;
     private String name;
     private String email;

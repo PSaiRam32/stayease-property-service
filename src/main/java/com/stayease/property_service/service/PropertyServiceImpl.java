@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class PropertyServiceImpl implements PropertyService {
+public class PropertyServiceImpl implements PropertyService{
 
     private final PropertyRepository propertyRepository;
     private final OwnerClient ownerClient;
@@ -39,7 +40,7 @@ public class PropertyServiceImpl implements PropertyService {
 
     @Override
     public List<PropertyResponse> getPropertiesByOwner(Long ownerId){
-        log.debug("Fetching all properties for owner ID: {}", ownerId);
+        log.debug("Fetching all properties for owner ID: {}",ownerId);
         List<PropertyResponse> properties=propertyRepository.findByOwnerIdAndDeletedFalse(ownerId)
                 .stream()
                 .map(this::mapToPropertyResponse)
@@ -49,9 +50,9 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     @Override
-    public Long countPropertiesByOwner(Long ownerId) {
+    public Long countPropertiesByOwner(Long ownerId){
         log.debug("Counting properties for owner ID: {}", ownerId);
-        Long count = propertyRepository.countByOwnerIdAndDeletedFalse(ownerId);
+        Long count=propertyRepository.countByOwnerIdAndDeletedFalse(ownerId);
         log.info("Property count for owner ID {}: {}", ownerId, count);
         return count;
     }
@@ -59,26 +60,26 @@ public class PropertyServiceImpl implements PropertyService {
     @Override
     public PropertyResponse createProperty(PropertyRequest request){
         log.info("Creating property for owner ID: {}", request.getOwnerId());
-        log.debug("Property details: title={}, description={}  location={},", request.getPropertyTitle(),request.getDescription(),request.getLocation());
+        log.debug("Property details: title={}, description={}  location={},",request.getPropertyTitle(),request.getDescription(),request.getLocation());
         validateOwnerEligibility(request.getOwnerId());
         Property property=buildProperty(request);
-        Property savedProperty = propertyRepository.save(property);
-        log.info("Property created successfully with ID: {}", property.getPropertyId());
+        Property savedProperty=propertyRepository.save(property);
+        log.info("Property created successfully with ID: {}",property.getPropertyId());
         return mapToPropertyResponse(savedProperty);
     }
 
     @Override
     public PropertyResponse getPropertyById(Long propertyId){
-        log.debug("Fetching property with ID: {}", propertyId);
+        log.debug("Fetching property with ID: {}",propertyId);
         Property property=getPropertyByIdOrThrow(propertyId);
-        log.info("Property fetched successfully with ID: {}", propertyId);
+        log.info("Property fetched successfully with ID: {}",propertyId);
         return mapToPropertyResponse(property);
     }
 
     @Override
     public PropertyResponse updateProperty(Long propertyId,UpdatePropertyRequest request){
-        log.info("Updating property with ID: {}", propertyId);
-        log.debug("Update request: title={}, location={}, description={}", request.getPropertyTitle(), request.getLocation(), request.getDescription());
+        log.info("Updating property with ID: {}",propertyId);
+        log.debug("Update request: title={}, location={}, description={}",request.getPropertyTitle(),request.getLocation(), request.getDescription());
         Property property=getPropertyByIdOrThrow(propertyId);
         updatePropertyDetails(property, request);
         Property updated=propertyRepository.save(property);
@@ -101,14 +102,14 @@ public class PropertyServiceImpl implements PropertyService {
     public List<PendingPropertyResponse> getPendingProperties(){
         log.info("Fetching pending properties.");
         List<PendingPropertyResponse> response=getPropertiesByStatus(PropertyStatus.PENDING);
-        log.info("Found {} pending properties.", response.size());
+        log.info("Found {} pending properties.",response.size());
         return response;
     }
 
     @Override
     @Transactional
     public PropertyResponse approveProperty(Long propertyId, ApprovePropertyRequest request){
-        log.info("Admin {} approving property {}", request.getAdminId(),propertyId);
+        log.info("Admin {} approving property {}",request.getAdminId(),propertyId);
         Property property=getPropertyByIdOrThrow(propertyId);
         validatePendingProperty(property);
         property.setStatus(PropertyStatus.ACTIVE);
@@ -127,14 +128,14 @@ public class PropertyServiceImpl implements PropertyService {
     public List<PendingPropertyResponse> getApprovedProperties(){
         log.info("Fetching approved properties.");
         List<PendingPropertyResponse> response=getPropertiesByStatus(PropertyStatus.ACTIVE);
-        log.info("Found {} approved properties.", response.size());
+        log.info("Found {} approved properties.",response.size());
         return response;
     }
 
     @Override
     @Transactional
     public PropertyResponse rejectProperty(Long propertyId, RejectPropertyRequest request){
-        log.info("Admin {} reject property {}", request.getAdminId(),propertyId);
+        log.info("Admin {} reject property {}",request.getAdminId(),propertyId);
         Property property=getPropertyByIdOrThrow(propertyId);
         validatePendingProperty(property);
         property.setStatus(PropertyStatus.REJECTED);
@@ -153,7 +154,7 @@ public class PropertyServiceImpl implements PropertyService {
     public List<PendingPropertyResponse> getRejectedProperties(){
         log.info("Fetching rejected properties.");
         List<PendingPropertyResponse> response=getPropertiesByStatus(PropertyStatus.REJECTED);
-        log.info("Found {} rejected properties.", response.size());
+        log.info("Found {} rejected properties.",response.size());
         return response;
     }
 
@@ -171,7 +172,7 @@ public class PropertyServiceImpl implements PropertyService {
         property.setIsActive(true);
         property.setUpdatedAt(LocalDateTime.now());
         Property savedProperty=propertyRepository.save(property);
-        log.info("Property {} activated successfully", propertyId);
+        log.info("Property {} activated successfully",propertyId);
         return mapToPropertyResponse(savedProperty);
     }
 
@@ -205,9 +206,32 @@ public class PropertyServiceImpl implements PropertyService {
         property.setStatus(PropertyStatus.INACTIVE);
         property.setIsActive(false);
         property.setUpdatedAt(LocalDateTime.now());
-        Property saved = propertyRepository.save(property);
+        Property saved=propertyRepository.save(property);
         log.info("Property {} deleted successfully.", saved.getPropertyId());
         return mapToPropertyResponse(saved);
+    }
+
+    @Override
+    public PropertySummaryResponse getPropertySummary(Long propertyId){
+        Property property=propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Property not found"));
+        return PropertySummaryResponse.builder()
+                .propertyId(property.getPropertyId())
+                .propertyName(property.getPropertyTitle())
+                .build();
+    }
+
+    @Override
+    public OwnerRoomStatisticsResponse getTotalRoomsByOwner(Long ownerId){
+        List<Property> properties=propertyRepository.findByOwnerIdAndDeletedFalse(ownerId);
+        long totalRooms=properties.stream()
+                .map(Property::getRooms)
+                .filter(Objects::nonNull)
+                .mapToLong(List::size)
+                .sum();
+        return OwnerRoomStatisticsResponse.builder()
+                .totalRooms(totalRooms)
+                .build();
     }
 
     //Validation Helper Methods
@@ -228,11 +252,11 @@ public class PropertyServiceImpl implements PropertyService {
     }
 
     private void validatePendingProperty(Property property){
-        if (property.getDeleted()){
+        if(property.getDeleted()){
             log.error("Deleted property {} cannot be reviewed.",property.getPropertyId());
             throw new BusinessException("Deleted property cannot be reviewed.");
         }
-        if (property.getStatus()!=PropertyStatus.PENDING){
+        if(property.getStatus()!=PropertyStatus.PENDING){
             log.error("Only pending properties can be reviewed. Current status: {}",property.getStatus());
             throw new BusinessException("Only pending properties can be reviewed.");
         }
@@ -337,7 +361,7 @@ public class PropertyServiceImpl implements PropertyService {
                 .toList();
     }
 
-    private PropertyResponse mapToPropertyResponse(Property property) {
+    private PropertyResponse mapToPropertyResponse(Property property){
         log.debug("Mapping property entity to DTO for property ID: {}", property.getPropertyId());
         OwnerResponse owner=ownerClient.getOwnerById(property.getOwnerId());
         List<Room> propertyRooms=roomRepository.findByProperty_PropertyId(property.getPropertyId());

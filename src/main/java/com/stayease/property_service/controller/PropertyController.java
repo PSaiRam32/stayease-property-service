@@ -1,9 +1,7 @@
 package com.stayease.property_service.controller;
 
 import com.stayease.property_service.dto.request.*;
-import com.stayease.property_service.dto.response.PendingPropertyResponse;
-import com.stayease.property_service.dto.response.PropertyResponse;
-import com.stayease.property_service.dto.response.PropertySearchResponse;
+import com.stayease.property_service.dto.response.*;
 import com.stayease.property_service.service.PropertyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
-import com.stayease.property_service.dto.response.ApiResponse;
 
 @RestController
 @RequestMapping("/properties")
@@ -26,7 +23,7 @@ public class PropertyController {
 
     private final PropertyService propertyService;
 
-    @GetMapping("/owner/{ownerId}")
+    @GetMapping("/owner-internal/{ownerId}")
     @Operation(summary = "Get Properties By Owner")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<List<PropertyResponse>>> getPropertiesByOwner(@PathVariable Long ownerId){
@@ -141,4 +138,18 @@ public class PropertyController {
         return ResponseEntity.ok(new ApiResponse<>("SUCCESS", "Property deleted successfully", response));
     }
 
+
+    @GetMapping("/internal/{propertyId}")
+    @Operation(summary = "Owner Internal - Get Property")
+    public ResponseEntity<ApiResponse<PropertySummaryResponse>> getProperty(@PathVariable Long propertyId) {
+        PropertySummaryResponse response=propertyService.getPropertySummary(propertyId);
+        return ResponseEntity.ok(new ApiResponse<>("SUCCESS","Property fetched successfully",response));
+    }
+
+    @GetMapping("/ownerroomscount/{ownerId}")
+    @Operation(summary = "Owner Internal - Total Rooms by OwnerId")
+    public ResponseEntity<ApiResponse<OwnerRoomStatisticsResponse>> getTotalRoomsByOwner(@PathVariable Long ownerId){
+        OwnerRoomStatisticsResponse response=propertyService.getTotalRoomsByOwner(ownerId);
+        return ResponseEntity.ok(new ApiResponse<>("SUCCESS","Room count fetched successfully",response));
+    }
 }

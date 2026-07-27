@@ -10,7 +10,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RoomResponse {
+public class RoomResponse{
     private Long roomId;
     private String roomNumber;
     private Long propertyId;

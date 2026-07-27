@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class RejectPropertyRequest {
+public class RejectPropertyRequest{
     @NotNull(message="Admin Id is required.")
     private Long adminId;
     @NotBlank(message="Rejection Reason is Required" )

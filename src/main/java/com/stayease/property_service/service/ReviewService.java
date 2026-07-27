@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public interface ReviewService {
+public interface ReviewService{
     ReviewResponse addReview(ReviewRequest request);
     ReviewResponse updateReview(UpdateReviewRequest request);
     void deleteReview(Long reviewId,Long userId);

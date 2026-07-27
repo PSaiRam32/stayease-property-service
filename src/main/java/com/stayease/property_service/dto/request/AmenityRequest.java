@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class AmenityRequest {
+public class AmenityRequest{
     @NotBlank(message = "Amenity name is required.")
     private String name;
 }

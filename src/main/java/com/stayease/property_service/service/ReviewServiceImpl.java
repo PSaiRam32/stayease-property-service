@@ -24,7 +24,7 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ReviewServiceImpl implements ReviewService {
+public class ReviewServiceImpl implements ReviewService{
 
     private final ReviewRepository reviewRepository;
     private final PropertyRepository propertyRepository;
@@ -38,7 +38,7 @@ public class ReviewServiceImpl implements ReviewService {
         Property property=getProperty(request.getPropertyId());
         validateProperty(property);
         validateDuplicateReview(request.getPropertyId(),request.getUserId());
-        validateOwnerReview(property, request.getUserId());
+        validateOwnerReview(property,request.getUserId());
         userClient.getUser(request.getUserId());
         Review review = Review.builder()
                 .propertyId(request.getPropertyId())
@@ -48,7 +48,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
-        Review saved = reviewRepository.save(review);
+        Review saved=reviewRepository.save(review);
         updateAverageRating(property.getPropertyId());
         log.info("Review {} created successfully", saved.getReviewId());
         return mapToReviewResponse(saved);
@@ -58,13 +58,13 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional
     public ReviewResponse updateReview(UpdateReviewRequest request){
-        log.info("Updating review {}", request.getReviewId());
+        log.info("Updating review {}",request.getReviewId());
         Review review=getReview(request.getReviewId());
         validateReviewOwner(review,request.getUserId());
         review.setRating(request.getRating());
         review.setReview(request.getReview());
         review.setUpdatedAt(LocalDateTime.now());
-        Review updatedReview = reviewRepository.save(review);
+        Review updatedReview=reviewRepository.save(review);
         updateAverageRating(review.getPropertyId());
         log.info("Review {} updated successfully", review.getReviewId());
         return mapToReviewResponse(updatedReview);
@@ -74,13 +74,13 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     @Transactional
     public void deleteReview(Long reviewId,Long userId){
-        log.info("Deleting review {}", reviewId);
+        log.info("Deleting review {}",reviewId);
         Review review=getReview(reviewId);
         validateReviewOwner(review,userId);
         Long propertyId=review.getPropertyId();
         reviewRepository.delete(review);
         updateAverageRating(propertyId);
-        log.info("Review {} deleted successfully", reviewId);
+        log.info("Review {} deleted successfully",reviewId);
     }
 
     @Override
@@ -101,8 +101,8 @@ public class ReviewServiceImpl implements ReviewService {
 
     //Helper Methods
 
-    private void validateReviewOwner(Review review, Long userId) {
-        if (!review.getUserId().equals(userId)) {
+    private void validateReviewOwner(Review review, Long userId){
+        if (!review.getUserId().equals(userId)){
             throw new UnauthorizedOperationException("You are not authorized to perform an action on this review.");
         }
     }

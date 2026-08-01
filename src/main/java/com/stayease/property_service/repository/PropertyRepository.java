@@ -15,4 +15,6 @@ public interface PropertyRepository extends JpaRepository<Property, Long>, JpaSp
     List<Property> findByOwnerIdAndDeletedFalse(Long ownerId);
     Long countByOwnerIdAndDeletedFalse(Long ownerId);
     List<Property> findByStatusAndDeletedFalse(PropertyStatus status);
+    boolean existsByOwnerIdAndPropertyTitleIgnoreCaseAndLocationIgnoreCaseAndDeletedFalse(
+            Long ownerId,String propertyTitle,String location);
 }

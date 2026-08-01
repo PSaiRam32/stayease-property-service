@@ -10,11 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 
 
-@FeignClient(
-        name = "owner-service",
-        url = "${services.owner.url}",
-        configuration = FeignConfig.class
-)
+@FeignClient(name = "owner-service",configuration = FeignConfig.class)
 public interface OwnerClient{
 
     @GetMapping("/owners/owners-internal/{ownerId}")

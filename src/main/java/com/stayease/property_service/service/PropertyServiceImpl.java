@@ -1,6 +1,5 @@
 package com.stayease.property_service.service;
 
-import com.stayease.property_service.config.OwnerClient;
 import com.stayease.property_service.dto.request.*;
 import com.stayease.property_service.dto.response.*;
 import com.stayease.property_service.entity.Amenity;
@@ -10,6 +9,7 @@ import com.stayease.property_service.entity.Room;
 import com.stayease.property_service.exception.BusinessException;
 import com.stayease.property_service.exception.ExternalServiceException;
 import com.stayease.property_service.exception.ResourceNotFoundException;
+import com.stayease.property_service.integration.OwnerServiceGateway;
 import com.stayease.property_service.repository.PropertyRepository;
 import com.stayease.property_service.repository.RoomRepository;
 import com.stayease.property_service.specification.PropertySpecification;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 public class PropertyServiceImpl implements PropertyService{
 
     private final PropertyRepository propertyRepository;
-    private final OwnerClient ownerClient;
+    private final OwnerServiceGateway ownerServiceGateway;
     private final RoomRepository roomRepository;
 
     @Override
@@ -62,6 +62,7 @@ public class PropertyServiceImpl implements PropertyService{
         log.info("Creating property for owner ID: {}", request.getOwnerId());
         log.debug("Property details: title={}, description={}  location={},",request.getPropertyTitle(),request.getDescription(),request.getLocation());
         validateOwnerEligibility(request.getOwnerId());
+        validateDuplicateProperty(request);
         Property property=buildProperty(request);
         Property savedProperty=propertyRepository.save(property);
         log.info("Property created successfully with ID: {}",property.getPropertyId());
@@ -111,6 +112,10 @@ public class PropertyServiceImpl implements PropertyService{
     public PropertyResponse approveProperty(Long propertyId, ApprovePropertyRequest request){
         log.info("Admin {} approving property {}",request.getAdminId(),propertyId);
         Property property=getPropertyByIdOrThrow(propertyId);
+        if (property.getStatus()==PropertyStatus.ACTIVE){
+            log.info("Property {} already approved.", propertyId);
+            return mapToPropertyResponse(property);
+        }
         validatePendingProperty(property);
         property.setStatus(PropertyStatus.ACTIVE);
         property.setIsActive(true);
@@ -137,6 +142,10 @@ public class PropertyServiceImpl implements PropertyService{
     public PropertyResponse rejectProperty(Long propertyId, RejectPropertyRequest request){
         log.info("Admin {} reject property {}",request.getAdminId(),propertyId);
         Property property=getPropertyByIdOrThrow(propertyId);
+        if (property.getStatus()==PropertyStatus.REJECTED){
+            log.info("Property {} already rejected.", propertyId);
+            return mapToPropertyResponse(property);
+        }
         validatePendingProperty(property);
         property.setStatus(PropertyStatus.REJECTED);
         property.setIsActive(false);
@@ -164,9 +173,9 @@ public class PropertyServiceImpl implements PropertyService{
         Property property=getPropertyByIdOrThrow(propertyId);
         validateOwnerEligibility(property.getOwnerId());
         validatePropertyActivation(property);
-        if (property.getStatus().equals(PropertyStatus.ACTIVE)){
-            log.error("Property is Currently in Active State {}",property.getStatus());
-            throw new BusinessException("Only INActive properties can be Activated.");
+        if (property.getStatus()==PropertyStatus.ACTIVE){
+            log.info("Property {} already active.",propertyId);
+            return mapToPropertyResponse(property);
         }
         property.setStatus(PropertyStatus.ACTIVE);
         property.setIsActive(true);
@@ -182,9 +191,9 @@ public class PropertyServiceImpl implements PropertyService{
         Property property=getPropertyByIdOrThrow(propertyId);
         validateOwnerEligibility(property.getOwnerId());
         validatePropertyActivation(property);
-        if (property.getStatus().equals(PropertyStatus.INACTIVE)){
-            log.error("Property is Currently in INActive State {}",property.getStatus());
-            throw new BusinessException("Only Active properties can be DeActivated.");
+        if(property.getStatus()==PropertyStatus.INACTIVE){
+            log.info("Property {} already inactive.",propertyId);
+            return mapToPropertyResponse(property);
         }
         property.setStatus(PropertyStatus.INACTIVE);
         property.setIsActive(false);
@@ -199,8 +208,9 @@ public class PropertyServiceImpl implements PropertyService{
     public PropertyResponse deleteProperty(Long propertyId){
         log.info("Deleting property {}", propertyId);
         Property property=getPropertyByIdOrThrow(propertyId);
-        if (property.getDeleted()) {
-            throw new BusinessException("Property is already deleted.");
+        if(property.getDeleted()){
+            log.info("Property {} already deleted.",propertyId);
+            return mapToPropertyResponse(property);
         }
         property.setDeleted(true);
         property.setStatus(PropertyStatus.INACTIVE);
@@ -237,13 +247,13 @@ public class PropertyServiceImpl implements PropertyService{
     //Validation Helper Methods
 
     private void validateOwnerEligibility(Long ownerId){
-        OwnerResponse owner=ownerClient.getOwnerById(ownerId);
+        OwnerResponse owner=ownerServiceGateway.getOwnerById(ownerId);
         if (owner==null){
             log.error("Owner not found with ID: {}", ownerId);
             throw new ResourceNotFoundException("Owner not found");
         }
         log.debug("Owner found: {}", owner);
-        String kycStatus=ownerClient.getKycStatus(ownerId);
+        String kycStatus=ownerServiceGateway.getKycStatus(ownerId);
         log.debug("KYC status for owner ID {}: {}", ownerId, kycStatus);
         if (!"VERIFIED".equals(kycStatus)){
             log.error("Owner KYC not verified for owner ID: {}", ownerId);
@@ -273,6 +283,13 @@ public class PropertyServiceImpl implements PropertyService{
 
    //Repository Helpers
 
+    private void validateDuplicateProperty(PropertyRequest request){
+        if (propertyRepository.existsByOwnerIdAndPropertyTitleIgnoreCaseAndLocationIgnoreCaseAndDeletedFalse(
+                request.getOwnerId(),request.getPropertyTitle(),request.getLocation())) {
+            throw new BusinessException("Property already exists for this owner at the same location.");
+        }
+    }
+
     private  Property getPropertyByIdOrThrow(Long propertyId){
         return propertyRepository.findByPropertyIdAndDeletedFalse(propertyId).orElseThrow(() -> {
             log.error("Property not found with ID to update the details: {}", propertyId);
@@ -291,7 +308,7 @@ public class PropertyServiceImpl implements PropertyService{
                 .map(Property::getOwnerId)
                 .distinct()
                 .toList();
-        List<OwnerResponse> owners=ownerClient.getOwnersByIds(ownerIds);
+        List<OwnerResponse> owners=ownerServiceGateway.getOwnersByIds(ownerIds);
         if(owners.isEmpty()){
             throw new ExternalServiceException("Unable to fetch owner details.");
         }
@@ -363,7 +380,7 @@ public class PropertyServiceImpl implements PropertyService{
 
     private PropertyResponse mapToPropertyResponse(Property property){
         log.debug("Mapping property entity to DTO for property ID: {}", property.getPropertyId());
-        OwnerResponse owner=ownerClient.getOwnerById(property.getOwnerId());
+        OwnerResponse owner=ownerServiceGateway.getOwnerById(property.getOwnerId());
         List<Room> propertyRooms=roomRepository.findByProperty_PropertyId(property.getPropertyId());
         List<RoomResponse> rooms=mapToRoomResponses(propertyRooms,property,owner);
         List<AmenityResponse> amenities=mapToAmenityResponses(property.getAmenities());

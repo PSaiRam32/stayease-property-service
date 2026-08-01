@@ -1,6 +1,6 @@
 package com.stayease.property_service.service;
 
-import com.stayease.property_service.config.UserClient;
+
 import com.stayease.property_service.dto.request.ReviewRequest;
 import com.stayease.property_service.dto.request.UpdateReviewRequest;
 import com.stayease.property_service.dto.response.ReviewResponse;
@@ -12,6 +12,7 @@ import com.stayease.property_service.exception.BusinessException;
 import com.stayease.property_service.exception.DuplicateResourceException;
 import com.stayease.property_service.exception.ResourceNotFoundException;
 import com.stayease.property_service.exception.UnauthorizedOperationException;
+import com.stayease.property_service.integration.UserServiceGateway;
 import com.stayease.property_service.repository.PropertyRepository;
 import com.stayease.property_service.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ public class ReviewServiceImpl implements ReviewService{
 
     private final ReviewRepository reviewRepository;
     private final PropertyRepository propertyRepository;
-    private final UserClient userClient;
+    private final UserServiceGateway userServiceGateway;
 
 
     @Override
@@ -39,7 +40,7 @@ public class ReviewServiceImpl implements ReviewService{
         validateProperty(property);
         validateDuplicateReview(request.getPropertyId(),request.getUserId());
         validateOwnerReview(property,request.getUserId());
-        userClient.getUser(request.getUserId());
+        userServiceGateway.getUser(request.getUserId());
         Review review = Review.builder()
                 .propertyId(request.getPropertyId())
                 .userId(request.getUserId())
@@ -75,7 +76,11 @@ public class ReviewServiceImpl implements ReviewService{
     @Transactional
     public void deleteReview(Long reviewId,Long userId){
         log.info("Deleting review {}",reviewId);
-        Review review=getReview(reviewId);
+        Review review=reviewRepository.findById(reviewId).orElse(null);
+        if (review==null){
+            log.info("Review {} already deleted.", reviewId);
+            return;
+        }
         validateReviewOwner(review,userId);
         Long propertyId=review.getPropertyId();
         reviewRepository.delete(review);
@@ -149,7 +154,7 @@ public class ReviewServiceImpl implements ReviewService{
     }
 
     private ReviewResponse mapToReviewResponse(Review review){
-        UserResponse user=userClient.getUser(review.getUserId());
+        UserResponse user=userServiceGateway.getUser(review.getUserId());
         return ReviewResponse.builder()
                 .reviewId(review.getReviewId())
                 .propertyId(review.getPropertyId())

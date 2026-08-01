@@ -4,6 +4,7 @@ import com.stayease.property_service.dto.request.AmenityRequest;
 import com.stayease.property_service.dto.response.AmenityResponse;
 import com.stayease.property_service.entity.Amenity;
 import com.stayease.property_service.entity.Property;
+import com.stayease.property_service.exception.BusinessException;
 import com.stayease.property_service.exception.ResourceNotFoundException;
 import com.stayease.property_service.repository.AmenityRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class AmenityServiceImpl implements AmenityService{
 	@Override
 	public AmenityResponse createAmenity(AmenityRequest request){
 		log.info("Creating amenity: {}", request.getName());
+		validateDuplicateAmenity(request.getName());
 		Amenity amenity=Amenity.builder()
 				.name(request.getName())
 				.build();
@@ -80,6 +82,12 @@ public class AmenityServiceImpl implements AmenityService{
 		currentAmenities.addAll(amenities);
 		property.setAmenities(currentAmenities);
 		propertyRepository.save(property);
+	}
+
+	private void validateDuplicateAmenity(String name){
+		if(amenityRepository.existsByNameIgnoreCase(name)){
+			throw new BusinessException("Amenity already exists.");
+		}
 	}
 }
 

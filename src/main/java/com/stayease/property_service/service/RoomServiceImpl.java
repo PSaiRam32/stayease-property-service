@@ -10,6 +10,7 @@ import com.stayease.property_service.entity.Room;
 import com.stayease.property_service.exception.BusinessException;
 import com.stayease.property_service.exception.ExternalServiceException;
 import com.stayease.property_service.exception.ResourceNotFoundException;
+import com.stayease.property_service.integration.OwnerServiceGateway;
 import com.stayease.property_service.repository.PropertyRepository;
 import com.stayease.property_service.repository.RoomRepository;
 import feign.FeignException;
@@ -25,7 +26,7 @@ import java.util.List;
 public class RoomServiceImpl implements RoomService{
 
     private final RoomRepository roomRepository;
-    private final OwnerClient ownerClient;
+    private final OwnerServiceGateway ownerServiceGateway;
     private final PropertyRepository propertyRepository;
 
     @Override
@@ -41,7 +42,7 @@ public class RoomServiceImpl implements RoomService{
             throw new BusinessException("Property is not associated with any owner.");
         }
         try{
-            OwnerResponse owner=ownerClient.getOwnerById(property.getOwnerId());
+            OwnerResponse owner=ownerServiceGateway.getOwnerById(property.getOwnerId());
             if(owner==null){
                 throw new ResourceNotFoundException("Owner not found");
             }
@@ -50,6 +51,7 @@ public class RoomServiceImpl implements RoomService{
         catch(FeignException ex){
             throw new ExternalServiceException("Owner Service is unavailable.");
         }
+        validateDuplicateRoom(propertyId, request.getRoomNumber());
         Room room=Room.builder()
                 .roomNumber(request.getRoomNumber())
                 .sharingCapacity(request.getSharingCapacity())
@@ -95,6 +97,12 @@ public class RoomServiceImpl implements RoomService{
                 .roomId(room.getRoomId())
                 .roomNumber(room.getRoomNumber())
                 .build();
+    }
+
+    private void validateDuplicateRoom(Long propertyId, String roomNumber){
+        if (roomRepository.existsByProperty_PropertyIdAndRoomNumber(propertyId,roomNumber)){
+            throw new BusinessException("Room number already exists for this property.");
+        }
     }
 }
 

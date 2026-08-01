@@ -28,7 +28,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/owner-internal/**",
                                 "/count",
-                                "/properties/rooms/**"
+                                "/properties/rooms/**",
+                                "/actuator/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

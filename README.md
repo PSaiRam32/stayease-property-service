@@ -193,12 +193,13 @@ The Property Service has been designed with the following objectives:
 | Category | Technology |
 |-----------|------------|
 | Language | Java 21 |
-| Framework | Spring Boot 3 |
-| Security | Spring Security |
+| Framework | Spring Boot 3.2.5 |
+| Security | Spring Security + JWT |
 | Database | MySQL |
 | ORM | Spring Data JPA |
 | Service Communication | OpenFeign |
-| Search | JPA Specifications |
+| Service Discovery | Netflix Eureka Client |
+| Dynamic Search | Spring Data JPA Specifications |
 | Validation | Bean Validation |
 | Build Tool | Gradle |
 
@@ -206,28 +207,40 @@ The Property Service has been designed with the following objectives:
 
 # 🏛 High-Level Architecture
 
-```text
-                    Client Applications
-                             │
-                             ▼
-                   Property Controller
-                             │
-                             ▼
-                    Property Service
-                             │
-       ┌─────────────┬──────────────┬──────────────┐
-       ▼             ▼              ▼              ▼
-Repositories   Room Service   Review Service   Amenity Service
-       │
-       ▼
- MySQL Database
-       │
-       ▼
- OpenFeign Clients
-       │
- ┌──────────────┴──────────────┐
- ▼                             ▼
-Owner Service             User Service
+```mermaid
+flowchart LR
+
+Client["Client / Frontend"]
+
+Gateway["API Gateway"]
+
+Property["Property Service"]
+
+Owner["Owner Service"]
+
+User["User Service"]
+
+MySQL[("Property Database")]
+
+Eureka["Eureka Server"]
+
+Actuator["Spring Boot Actuator"]
+
+Client --> Gateway
+
+Gateway --> Property
+
+Property --> Owner
+
+Property --> User
+
+Property --> MySQL
+
+Property -. Registers .-> Eureka
+Owner -. Registers .-> Eureka
+User -. Registers .-> Eureka
+
+Property --> Actuator
 ```
 
 ---
@@ -289,51 +302,33 @@ stayease-property-service
 │   │               │   └── UserClient.java
 │   │               │
 │   │               ├── controller
-│   │               │   ├── AmenityController.java
 │   │               │   ├── PropertyController.java
+│   │               │   ├── RoomController.java
 │   │               │   ├── ReviewController.java
-│   │               │   └── RoomController.java
+│   │               │   └── AmenityController.java
 │   │               │
 │   │               ├── dto
 │   │               │   ├── request
 │   │               │   └── response
 │   │               │
 │   │               ├── entity
-│   │               │   ├── Amenity.java
-│   │               │   ├── Property.java
-│   │               │   ├── PropertyStatus.java
-│   │               │   ├── Review.java
-│   │               │   ├── Room.java
-│   │               │   └── WashroomType.java
 │   │               │
 │   │               ├── exception
-│   │               │   ├── AmenityNotFoundException.java
-│   │               │   ├── DuplicateReviewException.java
-│   │               │   ├── GlobalExceptionHandler.java
-│   │               │   ├── InvalidPropertyStateException.java
-│   │               │   ├── PropertyNotFoundException.java
-│   │               │   ├── ReviewNotFoundException.java
-│   │               │   └── RoomNotFoundException.java
+│   │               │
+│   │               ├── integration
+│   │               │   ├── OwnerServiceGateway.java
+│   │               │   └── UserServiceGateway.java
 │   │               │
 │   │               ├── repository
-│   │               │   ├── AmenityRepository.java
-│   │               │   ├── PropertyRepository.java
-│   │               │   ├── ReviewRepository.java
-│   │               │   └── RoomRepository.java
 │   │               │
 │   │               ├── security
 │   │               │   ├── HeaderAuthenticationFilter.java
 │   │               │   └── SecurityConfig.java
 │   │               │
 │   │               ├── service
-│   │               │   ├── AmenityService.java
-│   │               │   ├── AmenityServiceImpl.java
-│   │               │   ├── PropertyService.java
-│   │               │   ├── PropertyServiceImpl.java
-│   │               │   ├── ReviewService.java
-│   │               │   ├── ReviewServiceImpl.java
-│   │               │   ├── RoomService.java
-│   │               │   └── RoomServiceImpl.java
+│   │               │
+│   │               ├── specification
+│   │               │   └── PropertySpecification.java
 │   │               │
 │   │               └── PropertyServiceApplication.java
 │   │
@@ -342,14 +337,10 @@ stayease-property-service
 │   │
 │   └── test
 │
-├── .gitattributes
-├── .gitignore
-├── LICENSE
 ├── README.md
 ├── build.gradle
-├── gradlew
-├── gradlew.bat
-└── settings.gradle
+├── settings.gradle
+└── LICENSE
 ```
 
 ---
@@ -358,39 +349,63 @@ stayease-property-service
 
 | Package | Responsibility |
 |----------|----------------|
-| **config** | Contains application-level configuration including OpenFeign clients, Swagger/OpenAPI configuration, Feign interceptors, and inter-service communication configuration. |
-| **controller** | Exposes REST APIs for property management, room management, amenity management, review management, property approval workflows, and internal property operations. |
-| **dto** | Contains Request and Response DTOs exchanged between clients, API Gateway, and other microservices. |
-| **entity** | Contains JPA entities and enumerations representing properties, rooms, amenities, reviews, property status, and washroom types. |
-| **exception** | Provides centralized exception handling along with business-specific exceptions related to properties, rooms, amenities, reviews, and workflow validation. |
-| **repository** | Spring Data JPA repositories responsible for persistence operations on Property, Room, Review, and Amenity entities. |
-| **security** | Implements internal service authentication using Header Authentication Filter and Spring Security configuration for protecting service endpoints. |
-| **service** | Implements business logic for property lifecycle management, room management, review management, amenity management, property search, approval workflows, and inter-service communication. |
-| **resources** | Contains Spring Boot configuration, application profiles, logging configuration, and environment-specific properties. |
+| **config** | Contains OpenFeign clients, Feign configuration, Swagger/OpenAPI configuration, request interceptors, and application-level infrastructure configuration. |
+| **controller** | Exposes REST APIs for property management, room management, review management, amenity management, search operations, approval workflows, and internal service APIs. |
+| **dto** | Contains request and response models exchanged between clients and other microservices. |
+| **entity** | Defines JPA entities and enumerations representing properties, rooms, amenities, reviews, and business states. |
+| **exception** | Provides centralized exception handling and business-specific exception classes. |
+| **integration** | Implements the Service Gateway layer responsible for communication with Owner Service and User Service using OpenFeign, Retry, and Circuit Breaker patterns. |
+| **repository** | Contains Spring Data JPA repositories responsible for persistence operations. |
+| **security** | Implements Header Authentication Filter, JWT parsing, role-based authorization, and Spring Security configuration. |
+| **service** | Implements the complete business logic for property lifecycle, rooms, amenities, reviews, approval workflow, search, and validations. |
+| **specification** | Implements dynamic filtering using Spring Data JPA Specifications for advanced property search. |
+| **resources** | Stores Spring Boot configuration, profiles, logging, Feign, Eureka, Resilience4j, and environment-specific properties. |
 | **test** | Contains unit tests and integration tests for controllers, services, repositories, and security components. |
 
 ---
 
 # 🏗 Layered Architecture
 
-The Property Service follows a layered architecture where each layer owns a single responsibility.
+```mermaid
+flowchart TD
 
-```text
-                    Client Request
-                          │
-                          ▼
-                Property Controllers
-                          │
-                          ▼
-                 Business Services
-                          │
-      ┌────────────┬────────────┬─────────────┐
-      ▼            ▼            ▼             ▼
-Repositories   Feign Clients  Security   Validation
-      │            │
-      ▼            ▼
- MySQL Database  Owner Service
-                 User Service
+A["REST Client"]
+
+B["Controller Layer"]
+
+C["Service Layer"]
+
+D["Business Validation"]
+
+E["Service Gateway"]
+
+F["OpenFeign Client"]
+
+G["Owner Service"]
+
+H["User Service"]
+
+I["Repository Layer"]
+
+J[("MySQL Database")]
+
+A --> B
+
+B --> C
+
+C --> D
+
+D --> E
+
+E --> F
+
+F --> G
+
+F --> H
+
+D --> I
+
+I --> J
 ```
 
 This separation ensures loose coupling, improved maintainability, easier testing, and independent scalability.
@@ -399,58 +414,58 @@ This separation ensures loose coupling, improved maintainability, easier testing
 
 # 📚 Package Overview
 
-The Property Service follows a modular package structure where every package owns a clearly defined business responsibility.
+The Property Service follows a modular and layered package structure where each package owns a single business responsibility.
 
 ---
 
 ## 📁 config
 
-Responsible for configuring the application's infrastructure.
+Responsible for configuring application infrastructure.
 
 Includes:
 
 - OpenFeign Clients
-- Swagger / OpenAPI
 - Feign Configuration
+- Swagger / OpenAPI
+- Request Interceptors
+- Header Propagation
 
 ---
 
 ## 📁 controller
 
-Acts as the entry point for all property-related APIs.
+Acts as the REST entry point for all property-related APIs.
 
 Responsibilities include:
 
 - Property Management
 - Room Management
-- Review Management
 - Amenity Management
-- Property Approval
+- Review Management
+- Property Approval Workflow
 - Property Search
-- Internal Property APIs
+- Internal APIs
 
 ---
 
 ## 📁 dto
 
-Contains request and response models exchanged between clients and services.
+Contains Request and Response DTOs exchanged between clients and microservices.
 
 Examples include:
 
 - PropertyRequest
 - PropertyResponse
+- PropertySearchRequest
 - RoomRequest
-- RoomResponse
+- AmenityRequest
 - ReviewRequest
-- ReviewResponse
-- AmenityResponse
-- PropertySummaryResponse
 
 ---
 
 ## 📁 entity
 
-Represents the application's persistent domain model.
+Represents the Property domain model.
 
 Current entities include:
 
@@ -459,18 +474,16 @@ Current entities include:
 - Review
 - Amenity
 
-Supporting Enumerations:
+Supporting enums include:
 
 - PropertyStatus
 - WashroomType
-
-These entities model the complete property domain while ensuring strong type safety and maintainable business logic.
 
 ---
 
 ## 📁 repository
 
-Provides database access using Spring Data JPA.
+Implements persistence using Spring Data JPA.
 
 Repositories include:
 
@@ -479,42 +492,65 @@ Repositories include:
 - ReviewRepository
 - AmenityRepository
 
-These repositories isolate persistence logic from the service layer.
+---
+
+## 📁 integration
+
+Implements the Service Gateway pattern.
+
+Gateway classes include:
+
+- OwnerServiceGateway
+- UserServiceGateway
+
+Responsibilities:
+
+- Retry
+- Circuit Breaker
+- Fallback Methods
+- Service Abstraction
+
+---
+
+## 📁 specification
+
+Contains Specification-based dynamic query generation.
+
+Responsibilities include:
+
+- Dynamic Filters
+- Search Criteria
+- Pagination
+- Sorting
 
 ---
 
 ## 📁 security
 
-Responsible for protecting internal service endpoints.
+Protects internal APIs using:
 
-Responsibilities include:
-
-- Header Authentication
-- Internal Service Validation
-- Spring Security Configuration
-- Request Filtering
-
-This layer ensures only trusted services can invoke protected internal APIs.
+- HeaderAuthenticationFilter
+- JWT Parsing
+- Spring Security
+- Role-Based Authorization
 
 ---
 
 ## 📁 service
 
-Contains all business logic.
+Contains all business rules.
 
 Major responsibilities:
 
 - Property Lifecycle Management
+- Property Approval
 - Room Management
-- Amenity Management
 - Review Management
-- Property Approval Workflow
+- Amenity Management
 - Property Search
-- Property Rating Calculation
+- Rating Calculation
 - Owner Validation
-- User Integration
-
-The service layer encapsulates all business rules while coordinating persistence operations and inter-service communication.
+- User Validation
 
 ---
 
@@ -522,154 +558,152 @@ The service layer encapsulates all business rules while coordinating persistence
 
 Provides centralized exception handling.
 
-Business exceptions include:
+Includes:
 
-- PropertyNotFoundException
-- RoomNotFoundException
-- ReviewNotFoundException
-- AmenityNotFoundException
-- DuplicateReviewException
-- InvalidPropertyStateException
+- Business Exceptions
+- Validation Exceptions
+- Resource Exceptions
+- External Service Exceptions
+- GlobalExceptionHandler
 
 The GlobalExceptionHandler converts exceptions into standardized API responses across the application.
 
 ---
 # 🔄 Property Request Lifecycle
 
-Every property request follows a structured request-processing pipeline.
+```mermaid
+flowchart TD
 
-```text
-Client Request
+Client["Client Request"]
 
-      │
+Controller["Property Controller"]
 
-      ▼
+Validation["Input Validation"]
 
-Property Controller
+Service["Business Logic"]
 
-      │
+Decision{"External Validation Required?"}
 
-      ▼
+Gateway["Service Gateway"]
 
-Input Validation
+Feign["OpenFeign"]
 
-      │
+External["Owner / User Service"]
 
-      ▼
+Repository["Repository"]
 
-Business Logic
+Database[("MySQL")]
 
-      │
+Response["API Response"]
 
-      ▼
+Client --> Controller
 
-Database / OpenFeign
+Controller --> Validation
 
-      │
+Validation --> Service
 
-      ▼
+Service --> Decision
 
-Generate Response
+Decision -- Yes --> Gateway
 
-      │
+Gateway --> Feign
 
-      ▼
+Feign --> External
 
-Return Response
+External --> Service
+
+Decision -- No --> Repository
+
+Service --> Repository
+
+Repository --> Database
+
+Database --> Repository
+
+Repository --> Response
+
+Response --> Client
 ```
 
 ---
 
 # 🏠 Property Registration Flow
 
-```text
-Owner
+```mermaid
+sequenceDiagram
 
-      │
+actor Owner
 
-      ▼
+participant Controller
 
-Create Property API
+participant Service
 
-      │
+participant Gateway as OwnerServiceGateway
 
-      ▼
+participant Feign
 
-Validate Request
+participant OwnerService
 
-      │
+participant Repository
 
-      ▼
+Owner->>Controller: Register Property
 
-Validate Owner
+Controller->>Service: Validate Request
 
-      │
+Service->>Gateway: Validate Owner
 
-      ▼
+Gateway->>Feign: getOwner()
 
-Verify KYC Status
+Feign->>OwnerService: Fetch Owner Details
 
-      │
+OwnerService-->>Feign: Owner Response
 
-      ▼
+Feign-->>Gateway: Owner Details
 
-Create Property
+Gateway-->>Service: VERIFIED
 
-      │
+Service->>Gateway: Validate KYC
 
-      ▼
+Gateway->>Feign: getKycStatus()
 
-Persist Property
+Feign->>OwnerService: Fetch KYC Status
 
-      │
+OwnerService-->>Feign: VERIFIED
 
-      ▼
+Feign-->>Gateway: VERIFIED
 
-Property Created
+Gateway-->>Service: VERIFIED
+
+Service->>Repository: Save Property
+
+Repository-->>Service: Property Saved
+
+Service-->>Controller: Property Response
+
+Controller-->>Owner: Property Created
 ```
 
 ---
 # 🏠 Property Lifecycle
 
-Every property progresses through a controlled lifecycle before becoming available to customers.
+```mermaid
+stateDiagram-v2
 
-```text
-Property Registration
+[*] --> PENDING
 
-        │
+PENDING --> APPROVED : Admin Approves
 
-        ▼
+PENDING --> REJECTED : Admin Rejects
 
-PENDING
+APPROVED --> ACTIVE
 
-        │
+ACTIVE --> DEACTIVATED
 
-        ▼
+DEACTIVATED --> ACTIVE
 
-Admin Review
+ACTIVE --> SOFT_DELETED
 
-   ┌──────────────┐
-   ▼              ▼
-
-APPROVED      REJECTED
-
-   │
-
-   ▼
-
-ACTIVE
-
-   │
-
-   ▼
-
-DEACTIVATED
-
-   │
-
-   ▼
-
-SOFT DELETED
+SOFT_DELETED --> [*]
 ```
 
 This workflow ensures that only verified and approved properties become visible to customers while preserving historical information through soft deletion.
@@ -679,194 +713,163 @@ This workflow ensures that only verified and approved properties become visible 
 
 # ✅ Property Approval Flow
 
-```text
-Admin
+```mermaid
+sequenceDiagram
 
-      │
+actor Admin
 
-      ▼
+participant Controller
 
-Approval API
+participant Service
 
-      │
+participant Repository
 
-      ▼
+Admin->>Controller: Approve / Reject Property
 
-Retrieve Property
+Controller->>Service: Validate Request
 
-      │
+Service->>Repository: Fetch Property
 
-      ▼
+Repository-->>Service: Property
 
-Validate Current Status
+Service->>Service: Validate Current Status
 
-      │
+alt Approved
 
-      ▼
+Service->>Repository: Update Status = APPROVED
 
-Approve / Reject
+else Rejected
 
-      │
+Service->>Repository: Update Status = REJECTED
 
-      ▼
+end
 
-Update Property Status
+Repository-->>Service: Saved
 
-      │
+Service-->>Controller: Response
 
-      ▼
-
-Persist Changes
-
-      │
-
-      ▼
-
-Return Updated Property
+Controller-->>Admin: Updated Property
 ```
 
 ---
 
 # 🛏 Room Management Flow
 
-```text
-Owner
+```mermaid
+sequenceDiagram
 
-      │
+actor Owner
 
-      ▼
+participant Controller
 
-Add Room API
+participant RoomService
 
-      │
+participant Gateway as OwnerServiceGateway
 
-      ▼
+participant Feign
 
-Validate Property
+participant OwnerService
 
-      │
+participant Repository
 
-      ▼
+Owner->>Controller: Add Room
 
-Validate Ownership
+Controller->>RoomService: Validate Property
 
-      │
+RoomService->>Gateway: Validate Owner
 
-      ▼
+Gateway->>Feign: getOwner()
 
-Create Room
+Feign->>OwnerService: Fetch Owner
 
-      │
+OwnerService-->>Feign: Owner Details
 
-      ▼
+Feign-->>Gateway: Owner Response
 
-Persist Room
+Gateway-->>RoomService: Valid Owner
 
-      │
+RoomService->>Repository: Save Room
 
-      ▼
+Repository-->>RoomService: Room Saved
 
-Return Room Details
+RoomService-->>Controller: Success
+
+Controller-->>Owner: Room Created
 ```
 
 ---
 
 # 🛋 Amenity Management Flow
 
-```text
-Owner / Admin
+```mermaid
+sequenceDiagram
 
-      │
+actor Owner
 
-      ▼
+participant Controller
 
-Amenity API
+participant AmenityService
 
-      │
+participant Repository
 
-      ▼
+Owner->>Controller: Assign Amenities
 
-Validate Amenity
+Controller->>AmenityService: Validate Request
 
-      │
+AmenityService->>Repository: Fetch Property
 
-      ▼
+Repository-->>AmenityService: Property
 
-Retrieve Property
+AmenityService->>Repository: Fetch Amenities
 
-      │
+Repository-->>AmenityService: Amenity List
 
-      ▼
+AmenityService->>Repository: Save Property-Amenity Mapping
 
-Associate Amenities
+Repository-->>AmenityService: Success
 
-      │
+AmenityService-->>Controller: Updated Property
 
-      ▼
-
-Persist Relationship
-
-      │
-
-      ▼
-
-Return Updated Property
+Controller-->>Owner: Success
 ```
-
 ---
 
 # ⭐ Review Management Flow
 
-```text
-Authenticated User
+```mermaid
+sequenceDiagram
 
-        │
+actor User
 
-        ▼
+participant Controller
 
-Submit Review API
+participant ReviewService
 
-        │
+participant UserGateway
 
-        ▼
+participant Repository
 
-Validate Property
+User->>Controller: Submit Review
 
-        │
+Controller->>ReviewService: Validate Request
 
-        ▼
+ReviewService->>UserGateway: Validate User
 
-Check Existing Review
+UserGateway-->>ReviewService: User Verified
 
-        │
+ReviewService->>Repository: Check Duplicate Review
 
-        ▼
+Repository-->>ReviewService: Not Exists
 
-Validate Reviewer
+ReviewService->>Repository: Save Review
 
-        │
+ReviewService->>Repository: Recalculate Average Rating
 
-        ▼
+Repository-->>ReviewService: Updated Rating
 
-Save Review
+ReviewService-->>Controller: Review Response
 
-        │
-
-        ▼
-
-Recalculate Average Rating
-
-        │
-
-        ▼
-
-Update Property Rating
-
-        │
-
-        ▼
-
-Return Review
+Controller-->>User: Review Created
 ```
 
 ---
@@ -889,50 +892,41 @@ These validations ensure fairness, consistency, and accurate property ratings ac
 
 # 🔍 Property Search Flow
 
-```text
-Customer
 
-      │
+```mermaid
+flowchart TD
 
-      ▼
+Client["Customer"]
 
-Search API
+Search["Search API"]
 
-      │
+Specification["Build JPA Specification"]
 
-      ▼
+Filters["Apply Dynamic Filters"]
 
-Build Search Criteria
+Database[("MySQL")]
 
-      │
+Pagination["Pagination"]
 
-      ▼
+Sorting["Sorting"]
 
-Create Specification
+Response["Matching Properties"]
 
-      │
+Client --> Search
 
-      ▼
+Search --> Specification
 
-Execute Query
+Specification --> Filters
 
-      │
+Filters --> Database
 
-      ▼
+Database --> Pagination
 
-Apply Pagination
+Pagination --> Sorting
 
-      │
+Sorting --> Response
 
-      ▼
-
-Apply Sorting
-
-      │
-
-      ▼
-
-Return Matching Properties
+Response --> Client
 ```
 
 ---
@@ -1087,26 +1081,45 @@ This follows the **Database per Service** pattern commonly adopted in enterprise
 
 The Property Service communicates with multiple services using **OpenFeign**.
 
-Current integrations include:
+```mermaid
+flowchart LR
 
-### Owner Service
+PropertyService["Property Service"]
 
-Responsibilities:
+Gateway1["OwnerServiceGateway"]
 
-- Validate Owner
-- Verify KYC Status
-- Retrieve Owner Information
+Gateway2["UserServiceGateway"]
 
----
+Retry["Retry"]
 
-### User Service
+Circuit["Circuit Breaker"]
 
-Responsibilities:
+Feign["OpenFeign"]
 
-- Retrieve Reviewer Information
-- Validate User During Review Operations
+Owner["Owner Service"]
 
----
+User["User Service"]
+
+PropertyService --> Gateway1
+
+Gateway1 --> Retry
+
+Retry --> Circuit
+
+Circuit --> Feign
+
+Feign --> Owner
+
+PropertyService --> Gateway2
+
+Gateway2 --> Retry
+
+Retry --> Circuit
+
+Circuit --> Feign
+
+Feign --> User
+```
 
 Using OpenFeign provides:
 
@@ -1117,7 +1130,21 @@ Using OpenFeign provides:
 - Service Abstraction
 
 ---
+# 🛡 Resilience Strategy
 
+The Property Service uses Resilience4j to improve fault tolerance during service-to-service communication.
+
+Implemented patterns include:
+
+- Retry
+- Circuit Breaker
+- Gateway Pattern
+- Fallback Methods
+- Configurable Timeouts
+
+Every downstream service call is routed through a dedicated Service Gateway before reaching the OpenFeign client. This architecture isolates external dependencies, improves maintainability, and provides graceful failure handling during service outages.
+
+---
 # 🌍 Spring Profiles
 
 The application supports multiple runtime environments using Spring Profiles.
@@ -1246,7 +1273,13 @@ Implemented:
 - Externalized Configuration
 - DTO Separation
 - Repository Pattern
-
+- Netflix Eureka Service Discovery
+- Spring Boot Actuator
+- Resilience4j Retry
+- Resilience4j Circuit Breaker
+- Gateway Layer
+- Header Propagation
+- Correlation ID Propagation
 These practices provide a solid foundation for scalable enterprise deployments.
 
 ---
@@ -1275,9 +1308,9 @@ The following enhancements are planned for future iterations.
 
 ### Observability
 
-- Spring Boot Actuator
 - Prometheus
 - Grafana
+- Micrometer Metrics
 - OpenTelemetry
 - Distributed Tracing
 
